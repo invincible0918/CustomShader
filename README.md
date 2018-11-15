@@ -1,4 +1,4 @@
-Optimize Unity's default PBR shader for our mobile game
+<td><strong>Optimize Unity's default PBR shader for our mobile game</strong></td>
 
 We use shader lod to switch between high/low end devices.</p>
 
