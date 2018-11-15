@@ -1,4 +1,4 @@
-Shader "Custom/PBR/MultiLayered/Standard" 
+Shader "Custom/PBR/MultiLayered/Standard"
 {
     Properties
     {	

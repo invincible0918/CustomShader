@@ -1,6 +1,6 @@
 ﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-Shader "Custom/Effect/WaterCaustic" 
+Shader "Custom/Effect/WaterCaustic"
 {
 	Properties 
 	{
@@ -8,6 +8,7 @@ Shader "Custom/Effect/WaterCaustic"
 		_NoiseTex ("Noise Texture", 2D) = "white" {}
 		_Scale("Scale", Range (0.00, 10.00)) = 1.0
 		_Speed("Speed", Range (0.00, 5.00)) = 0.0
+		_Distortion("Distortion", Range (0.00, 0.10)) = 0.05
 	}	
 
 	Category 
@@ -34,6 +35,7 @@ Shader "Custom/Effect/WaterCaustic"
 
 				half _Scale;
 				half _Speed;
+				half _Distortion;
 
 				struct appdata_t 
 				{
@@ -61,13 +63,13 @@ Shader "Custom/Effect/WaterCaustic"
 					half3 noise = tex2D(_NoiseTex, (i.texcoord.xy - _Time.x) * 5.0f).rgb;
 
 					half t01 = (sin(_Time.y) + 1.0f) * 0.5f;
-					half t02 = (sin(-_Time.y) + 1.0f) * 0.5f;
+					half t02 = (cos(-_Time.x) + 1.0f) * 0.5f;
 
-					half scale01 = lerp(1.0f - t01 * 0.1f, 1.0f + t01 * 0.1f, saturate(noise.r));
-					half scale02 = lerp(1.0f - t02 * 0.1f, 1.0f + t02 * 0.1f, saturate(noise.g));
+					half scale01 = lerp(1.0f - t01 * _Distortion, 1.0f + t01 * _Distortion, saturate(noise.r));
+					half scale02 = lerp(1.0f - t02 * _Distortion, 1.0f + t02 * _Distortion, saturate(noise.g));
 
-					half scaleU = lerp(1.0f - t01 * 0.1f, 1.0f + t01 * 0.1f, t01) * scale01;
-					half scaleV = lerp(1.0f - t02 * 0.1f, 1.0f + t02 * 0.1f, t02) * scale02;
+					half scaleU = lerp(1.0f - t01 * _Distortion, 1.0f + t01 * _Distortion, t01) * scale01;
+					half scaleV = lerp(1.0f - t02 * _Distortion, 1.0f + t02 * _Distortion, t02) * scale02;
 					half2 uv = i.texcoord.xy * half2(scaleU, scaleV) * _Scale + _Time.x * _Speed;
 					half4 col = tex2D(_MainTex, uv);
 

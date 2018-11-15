@@ -1,4 +1,4 @@
-Shader "Custom/PBR/Scene/Standard" 
+Shader "Custom/PBR/Scene/Standard"
 {
     Properties
     {
@@ -78,7 +78,13 @@ Shader "Custom/PBR/Scene/Standard"
 		[ToggleOff] _EnableWaterReflectionAndRefraction("Enable Water Reflection/Refraction", Float) = 0.0
 		_NoiseTex ("Noise Texture", 2D) = "black" {}
 		_FoamTex ("Foam Texture", 2D) = "black" {}
-    }
+
+		// Only works on low-end
+		_FakeMainLightDirection("Fake Main Light Direction", Vector) = (1, 1, -1, 0)
+		_FakeMainLightColor("Fake Main Light Color", Color) = (1, 1, 1)
+        _FakeShininess("Fake Shininess", Range(0.0, 128.0)) = 32.0
+        _FakeSpecualrScale("Fake Specualr Scale", Range(0.0, 10.0)) = 1.0
+    }	
 
     CGINCLUDE
         #define UNITY_SETUP_BRDF_INPUT MetallicSetup
@@ -134,11 +140,12 @@ Shader "Custom/PBR/Scene/Standard"
 			#include "UnityStandardCore.cginc"
 			#include "../../Includes/CustomScene.cginc"
 
-			_VertexOutputForward vert (_VertexInput v) { return _vertForward(v); }
-			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForward(i); }
+			_VertexOutputForward vert (_VertexInput v) { return _vertForwardLOD0(v); }
+			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForwardLOD0(i); }
             ENDCG
         }
 		
+		/*
         // ------------------------------------------------------------------
         //  Additive forward pass (one light per pass)
         Pass
@@ -188,7 +195,8 @@ Shader "Custom/PBR/Scene/Standard"
 				
 		// ------------------------------------------------------------------
         //  Shadow rendering pass
-        Pass {
+        Pass 
+		{
             Name "ShadowCaster"
             Tags { "LightMode" = "ShadowCaster" }
 
@@ -222,7 +230,64 @@ Shader "Custom/PBR/Scene/Standard"
 
             ENDCG	
         }
+		*/
     }
+		
+	SubShader
+    {
+        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+        LOD 200
+
+        // ------------------------------------------------------------------
+        //  Base forward pass (directional light, emission, lightmaps, ...)
+        Pass
+        {
+            Name "FORWARD"
+            Tags { "LightMode" = "ForwardBase" }
+
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
+
+            CGPROGRAM
+			
+            #pragma target 3.0
+
+            // -------------------------------------
+
+            #pragma shader_feature _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _EMISSION
+            #pragma shader_feature _METALLICGLOSSMAP
+            //#pragma multi_compile _METALLICGLOSSMAP
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature _ _GLOSSYREFLECTIONS_OFF
+            #pragma shader_feature _PARALLAXMAP
+
+			// scene macro
+			#pragma shader_feature _ENABLE_CHANGED_COLOR
+			#pragma shader_feature _ENABLE_REALTIME_REFLECTION
+			#pragma shader_feature _ENABLE_WATER
+			#pragma shader_feature _ENABLE_WATER_REFLECTION_AND_REFRACTION
+				
+            #pragma multi_compile_fwdbase
+            #pragma multi_compile_fog
+            #pragma multi_compile_instancing
+            // Uncomment the following line to enable dithering LOD crossfade. Note: there are more in the file to uncomment for other passes.
+            //#pragma multi_compile _ LOD_FADE_CROSSFADE
+
+			#pragma vertex vert
+            #pragma fragment frag
+
+			#include "UnityStandardCore.cginc"
+			#include "../../Includes/CustomScene.cginc"
+
+			_VertexOutputForward vert (_VertexInput v) { return _vertForwardLOD1(v); }
+			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForwardLOD1(i); }
+            ENDCG
+        }
+    }	
     FallBack "VertexLit"
     CustomEditor "CustomSceneStandardGUI"
-}	
+}

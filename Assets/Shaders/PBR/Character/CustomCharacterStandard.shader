@@ -1,4 +1,4 @@
-Shader "Custom/PBR/Character/Standard" 
+Shader "Custom/PBR/Character/Standard"
 {
     Properties	
     {

@@ -1,4 +1,4 @@
-Shader "Custom/PBR/Character/Specular" 
+Shader "Custom/PBR/Character/Specular"
 {
     Properties	
     {
@@ -59,7 +59,13 @@ Shader "Custom/PBR/Character/Specular"
 
         _LTPower("LTPower", Range(0.0, 32.0)) = 2.0
         _LTScale("LTScale", Range(0.0, 10.0)) = 5.0
-    }	
+
+		// Only works on low-end
+		_FakeMainLightDirection("Fake Main Light Direction", Vector) = (1, 1, -1, 0)
+		_FakeMainLightColor("Fake Main Light Color", Color) = (1, 1, 1)
+        _FakeShininess("Fake Shininess", Range(0.0, 128.0)) = 24.0
+        _FakeSpecualrScale("Fake Specualr Scale", Range(0.0, 10.0)) = 0.5
+	}
 
     CGINCLUDE
         #define UNITY_SETUP_BRDF_INPUT SpecularSetup
@@ -68,8 +74,8 @@ Shader "Custom/PBR/Character/Specular"
     SubShader
     {
         Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
-        LOD 300
 
+        LOD 300
 
         // ------------------------------------------------------------------
         //  Base forward pass (directional light, emission, lightmaps, ...)
@@ -113,12 +119,12 @@ Shader "Custom/PBR/Character/Specular"
 			#include "UnityStandardCoreForward.cginc"
 			#include "../../Includes/CustomCharacter.cginc"
 
-			_VertexOutputForward vert (_VertexInput v) { return _vertForward(v); }
-			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForward(i); }
+			_VertexOutputForward vert (_VertexInput v) { return _vertForwardLOD0(v); }
+			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForwardLOD0(i); }
 
             ENDCG
         }
-			
+
         // ------------------------------------------------------------------
         //  Additive forward pass (one light per pass)
         Pass
@@ -151,10 +157,68 @@ Shader "Custom/PBR/Character/Specular"
             // Uncomment the following line to enable dithering LOD crossfade. Note: there are more in the file to uncomment for other passes.
             //#pragma multi_compile _ LOD_FADE_CROSSFADE
 
-            #pragma vertex vertAdd
+			#pragma vertex vertAdd
             #pragma fragment fragAdd
 
+            #include "UnityStandardCoreForward.cginc"
+			#include "../../Includes/CustomCharacter.cginc"
+
+			_VertexOutputForwardAdd vertAdd (_VertexInput v) { return _vertForwardAddLOD0(v); }
+			half4 fragAdd (_VertexOutputForwardAdd i) : SV_Target { return _fragForwardAddLOD0(i); }
+
+            ENDCG
+        }
+    }
+			
+	SubShader
+    {
+        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+        LOD 200
+
+        // ------------------------------------------------------------------
+        //  Base forward pass (directional light, emission, lightmaps, ...)
+        Pass
+        {
+            Name "FORWARD"
+            Tags { "LightMode" = "ForwardBase" }
+
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
+
+            CGPROGRAM
+
+            #pragma target 3.0
+
+            // -------------------------------------
+            //#pragma shader_feature _NORMALMAP
+            #pragma multi_compile _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _EMISSION
+            //#pragma shader_feature _SPECGLOSSMAP
+            #pragma multi_compile _SPECGLOSSMAP
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature _ _GLOSSYREFLECTIONS_OFF
+            #pragma shader_feature _PARALLAXMAP
+
+			// SSS
+			#pragma shader_feature _ENABLE_SSS
+
+            #pragma multi_compile_fwdbase
+            #pragma multi_compile_fog
+            #pragma multi_compile_instancing
+            // Uncomment the following line to enable dithering LOD crossfade. Note: there are more in the file to uncomment for other passes.
+            //#pragma multi_compile _ LOD_FADE_CROSSFADE
+
+			#pragma vertex vert
+            #pragma fragment frag
+
 			#include "UnityStandardCoreForward.cginc"
+			#include "../../Includes/CustomCharacter.cginc"
+
+			_VertexOutputForward vert (_VertexInput v) { return _vertForwardLOD1(v); }
+			half4 frag (_VertexOutputForward i) : SV_Target { return _fragForwardLOD1(i); }
 
             ENDCG
         }

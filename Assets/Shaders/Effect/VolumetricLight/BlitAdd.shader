@@ -29,7 +29,7 @@
 
 
 
-Shader "Custom/Effect/VolumetricLight/BlitAdd" 
+Shader "Custom/Effect/VolumetricLight/BlitAdd"
 {
 	Properties{ _MainTex("Texture", any) = "" {} }
 	SubShader
