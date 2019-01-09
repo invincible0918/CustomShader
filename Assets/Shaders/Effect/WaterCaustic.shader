@@ -1,6 +1,6 @@
 ﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-Shader "Custom/Effect/WaterCaustic"
+Shader "Popcap/Effect/WaterCaustic" 
 {
 	Properties 
 	{

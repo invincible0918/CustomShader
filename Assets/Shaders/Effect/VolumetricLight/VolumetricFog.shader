@@ -1,5 +1,5 @@
 
-Shader "Custom/Effect/VolumetricLight/VolumetricFog"
+Shader "Popcap/Effect/VolumetricLight/VolumetricFog"
 {
 	Properties {
 		_Fresnel("Fresnel", Range (0., 10.)) = 1.

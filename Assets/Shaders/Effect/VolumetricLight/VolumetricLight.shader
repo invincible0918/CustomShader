@@ -31,7 +31,7 @@
 
 
 
-Shader "Custom/Effect/VolumetricLight/VolumetricLight"
+Shader "Popcap/Effect/VolumetricLight/VolumetricLight"
 {
 	Properties
 	{

@@ -29,7 +29,7 @@
 
 
 
-Shader "Custom/Effect/VolumetricLight/BilateralBlur"
+Shader "Popcap/Effect/VolumetricLight/BilateralBlur"
 {
 	Properties
 	{
